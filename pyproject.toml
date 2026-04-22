@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terminalsensei"
+version = "0.1.0"
+description = "Passive terminal intelligence that turns CLI behavior into structured learning."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "TerminalSensei Contributors" }]
+dependencies = []
+
+[project.scripts]
+sensei = "terminalsensei.cli.main:main"
+terminalsensei = "terminalsensei.cli.main:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+terminalsensei = ["db/schema.sql", "collector/hooks.sh"]
