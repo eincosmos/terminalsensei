@@ -92,13 +92,13 @@ def cmd_tips(db_path: str) -> int:
 def cmd_book(db_path: str) -> int:
     conn = _open_conn(db_path)
     refresh_missing_descriptions(conn, limit=200)
-    top = most_used_commands(conn, limit=10)
+    top = most_used_commands(conn, limit=10_000)
     if not top:
         print("No commands in your CLI book yet.")
         return 0
 
     for index, command in enumerate(top):
-        print(f"📘 Command: {command.name}")
+        print(f"📘 [{index + 1}] Command: {command.name}")
         print("")
         print("🧠 Meaning:")
         print(command.description or "No description available.")
@@ -142,6 +142,93 @@ def cmd_book(db_path: str) -> int:
     return 0
 
 
+def _resolve_book_command_name(connection: sqlite3.Connection, target: str) -> str | None:
+    token = target.strip()
+    if not token:
+        return None
+
+    if token.isdigit():
+        index = int(token)
+        if index <= 0:
+            return None
+        rows = connection.execute(
+            """
+            SELECT name
+            FROM commands
+            ORDER BY usage_count DESC, last_used DESC
+            LIMIT 1 OFFSET ?
+            """,
+            (index - 1,),
+        ).fetchall()
+        return rows[0][0] if rows else None
+    return token
+
+
+def cmd_delete(db_path: str, target: str) -> int:
+    conn = _open_conn(db_path)
+    command_name = _resolve_book_command_name(conn, target)
+    if not command_name:
+        print(f"Could not resolve command target: {target}")
+        return 1
+
+    existing = conn.execute("SELECT 1 FROM commands WHERE name = ?", (command_name,)).fetchone()
+    if not existing:
+        print(f"Command not found in your book: {command_name}")
+        return 1
+
+    conn.execute(
+        """
+        DELETE FROM examples
+        WHERE pattern_id IN (
+            SELECT id FROM patterns
+            WHERE pattern_string = ? OR pattern_string LIKE ?
+        )
+        """,
+        (command_name, f"{command_name} %"),
+    )
+    conn.execute(
+        "DELETE FROM patterns WHERE pattern_string = ? OR pattern_string LIKE ?",
+        (command_name, f"{command_name} %"),
+    )
+    conn.execute(
+        """
+        DELETE FROM logs
+        WHERE raw_command = ? OR raw_command LIKE ?
+        """,
+        (command_name, f"{command_name} %"),
+    )
+    conn.execute(
+        """
+        DELETE FROM mistakes
+        WHERE wrong_command = ? OR wrong_command LIKE ?
+           OR corrected_command = ? OR corrected_command LIKE ?
+        """,
+        (command_name, f"{command_name} %", command_name, f"{command_name} %"),
+    )
+    conn.execute("DELETE FROM commands WHERE name = ?", (command_name,))
+    conn.commit()
+    print(f"Deleted command from book: {command_name}")
+    return 0
+
+
+def cmd_clear(db_path: str) -> int:
+    conn = _open_conn(db_path)
+    conn.execute("DELETE FROM examples")
+    conn.execute("DELETE FROM patterns")
+    conn.execute("DELETE FROM mistakes")
+    conn.execute("DELETE FROM logs")
+    conn.execute("DELETE FROM commands")
+    conn.execute(
+        """
+        DELETE FROM sqlite_sequence
+        WHERE name IN ('examples', 'patterns', 'mistakes', 'logs', 'commands')
+        """
+    )
+    conn.commit()
+    print("Cleared all book data.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sensei", description="TerminalSensei CLI mentor.")
     parser.add_argument("--db-path", default=default_db_path(), help="Path to SQLite database.")
@@ -156,6 +243,9 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("book", help="Show full CLI knowledge book.")
     subparsers.add_parser("patterns", help="Show normalized command patterns.")
     subparsers.add_parser("tips", help="Show improvement suggestions.")
+    subparsers.add_parser("clear", help="Clear all tracked book data.")
+    delete_parser = subparsers.add_parser("delete", help="Delete a command from book by index or name.")
+    delete_parser.add_argument("target", help="Book index (from `sensei book`) or command name.")
     subparsers.add_parser("daemon", help="Run processing daemon.")
     return parser
 
@@ -182,6 +272,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_patterns(args.db_path)
     if args.command == "tips":
         return cmd_tips(args.db_path)
+    if args.command == "clear":
+        return cmd_clear(args.db_path)
+    if args.command == "delete":
+        return cmd_delete(args.db_path, args.target)
 
     parser.print_help(sys.stderr)
     return 1

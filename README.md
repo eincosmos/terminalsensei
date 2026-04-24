@@ -90,9 +90,11 @@ terminalsensei --daemon --state-path /tmp/terminalsensei-state.json
 
 ```bash
 sensei stats      # command usage stats
-sensei book       # full CLI knowledge book
+sensei book       # full CLI knowledge book (numbered entries)
 sensei patterns   # normalized syntax patterns + examples
 sensei tips       # behavior-based improvement suggestions
+sensei delete 3   # delete command by numbered book index (or command name)
+sensei clear      # clear all tracked book data
 ```
 
 ## Database Location
