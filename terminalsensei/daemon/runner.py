@@ -72,13 +72,14 @@ def run_daemon(
     db_path: str | None = None,
     log_path: str | None = None,
     state_path: str | None = None,
+    vault_path: str | None = None,
     interval: float = 2.0,
     once: bool = False,
 ) -> int:
     effective_log_path = log_path or default_log_path()
     effective_state_path = state_path or default_state_path()
     offset = load_offset(effective_state_path)
-    tracker = Tracker(db_path=db_path)
+    tracker = Tracker(db_path=db_path, vault_path=vault_path)
 
     try:
         while True:

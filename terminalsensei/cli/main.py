@@ -15,6 +15,7 @@ from terminalsensei.core.tracker import Tracker, default_db_path
 from terminalsensei.daemon.runner import default_log_path, default_state_path, run_daemon
 from terminalsensei.engine.explainer import refresh_missing_descriptions
 from terminalsensei.engine.suggester import generate_tips
+from terminalsensei.exporters.obsidian import ObsidianExporter
 
 
 def _format_ts(ts: int) -> str:
@@ -229,6 +230,18 @@ def cmd_clear(db_path: str) -> int:
     return 0
 
 
+def cmd_export(db_path: str, target: str, vault_path: str, subfolder: str = "TerminalSensei") -> int:
+    conn = _open_conn(db_path)
+    
+    if target == "obsidian":
+        exporter = ObsidianExporter(vault_path, subfolder=subfolder)
+        return exporter.export(conn)
+    else:
+        print(f"Unknown export target: {target}")
+        print("Available targets: obsidian")
+        return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sensei", description="TerminalSensei CLI mentor.")
     parser.add_argument("--db-path", default=default_db_path(), help="Path to SQLite database.")
@@ -237,6 +250,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--daemon", action="store_true", help="Run background daemon.")
     parser.add_argument("--once", action="store_true", help="For daemon mode: process currently available entries then exit.")
     parser.add_argument("--interval", type=float, default=2.0, help="Daemon polling interval in seconds.")
+    parser.add_argument("--vault-path", default=None, help="Path to Obsidian vault for auto-sync (optional).")
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("stats", help="Show command usage stats.")
@@ -246,7 +260,12 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("clear", help="Clear all tracked book data.")
     delete_parser = subparsers.add_parser("delete", help="Delete a command from book by index or name.")
     delete_parser.add_argument("target", help="Book index (from `sensei book`) or command name.")
-    subparsers.add_parser("daemon", help="Run processing daemon.")
+    export_parser = subparsers.add_parser("export", help="Export knowledge base to external format.")
+    export_parser.add_argument("target", choices=["obsidian"], help="Export target format (obsidian).")
+    export_parser.add_argument("vault_path", help="Path to Obsidian vault root directory.")
+    export_parser.add_argument("--subfolder", default="TerminalSensei", help="Subfolder within vault (default: TerminalSensei).")
+    daemon_parser = subparsers.add_parser("daemon", help="Run processing daemon.")
+    daemon_parser.add_argument("--vault-path", default=None, help="Path to Obsidian vault for auto-sync (optional).")
     return parser
 
 
@@ -254,11 +273,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    # Get vault path from either --vault-path flag or daemon subcommand option
+    vault_path = getattr(args, 'vault_path', None)
+
     if args.daemon or args.command == "daemon":
         run_daemon(
             db_path=args.db_path,
             log_path=args.log_path,
             state_path=args.state_path,
+            vault_path=vault_path,
             interval=args.interval,
             once=args.once,
         )
@@ -276,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_clear(args.db_path)
     if args.command == "delete":
         return cmd_delete(args.db_path, args.target)
+    if args.command == "export":
+        return cmd_export(args.db_path, args.target, args.vault_path, args.subfolder)
 
     parser.print_help(sys.stderr)
     return 1

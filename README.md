@@ -95,7 +95,33 @@ sensei patterns   # normalized syntax patterns + examples
 sensei tips       # behavior-based improvement suggestions
 sensei delete 3   # delete command by numbered book index (or command name)
 sensei clear      # clear all tracked book data
+sensei export obsidian /path/to/vault  # export to Obsidian vault
 ```
+
+### Export to Obsidian
+
+Export your TerminalSensei book to an **Obsidian vault folder** for long-term knowledge management:
+
+```bash
+# Export to vault (default subfolder: TerminalSensei)
+sensei export obsidian ~/Documents/MyVault
+
+# Custom subfolder
+sensei export obsidian ~/Documents/MyVault --subfolder "CLI-Notes"
+```
+
+This creates:
+- **_index.md** — Main index with all commands, organized by frequency
+- **Commands/** — Individual markdown files for each command with metadata
+- **Patterns/** — Normalized syntax patterns and examples
+- **Mistakes/** — Common mistakes with corrections
+
+Each command note includes:
+- 🧠 Description
+- 📊 Usage statistics (count, first used, last used)
+- 📌 Recent usage examples
+- 🔗 Related patterns
+- Obsidian backlinks for navigation
 
 ## Database Location
 
