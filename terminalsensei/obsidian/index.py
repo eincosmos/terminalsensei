@@ -62,7 +62,7 @@ class IndexGenerator:
         lines.append("")
         for i, (name, usage_count, _) in enumerate(rows[:15], 1):
             safe_name = sanitize_filename(name)
-            lines.append(f"{i}. [[{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(f"{i}. [[Commands/{safe_name}|{name}]] — {usage_count} uses")
         lines.append("")
 
         # Section 2: All Commands (alphabetical order)
@@ -71,7 +71,7 @@ class IndexGenerator:
         sorted_rows = sorted(rows, key=lambda x: x[0].lower())
         for name, usage_count, _ in sorted_rows:
             safe_name = sanitize_filename(name)
-            lines.append(f"- [[{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(f"- [[Commands/{safe_name}|{name}]] — {usage_count} uses")
         lines.append("")
 
         # Section 3: Least Used Commands
@@ -80,7 +80,7 @@ class IndexGenerator:
         least_used = sorted(rows, key=lambda x: x[1])[:10]
         for name, usage_count, _ in least_used:
             safe_name = sanitize_filename(name)
-            lines.append(f"- [[{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(f"- [[Commands/{safe_name}|{name}]] — {usage_count} uses")
         lines.append("")
 
         # Recent mistakes
