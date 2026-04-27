@@ -269,18 +269,50 @@ def get_explanation(command: str) -> dict:
 
     Returns:
         Dict with: meaning, when, tips, alternatives, pattern
-        Returns minimal dict if command not in knowledge base.
+        Returns enhanced fallback dict if command not in knowledge base.
     """
     normalized = command.lower().strip()
 
     if normalized in COMMAND_KNOWLEDGE:
         return COMMAND_KNOWLEDGE[normalized]
 
-    # Fallback for unknown commands
+    # Fallback for unknown commands with better defaults
+    meaning_map = {
+        "build": "Compiles source code or creates packages",
+        "install": "Installs packages, software, or dependencies",
+        "start": "Starts a service, application, or process",
+        "stop": "Stops a running service or process",
+        "run": "Executes a script or application",
+        "test": "Runs automated tests",
+        "deploy": "Deploys application to production or staging",
+        "lint": "Checks code for style and quality issues",
+        "format": "Automatically formats code",
+        "migrate": "Applies database migrations or schema changes",
+        "sync": "Synchronizes data or files",
+        "backup": "Creates a backup copy",
+        "restore": "Restores from a backup",
+        "clean": "Removes temporary or build files",
+        "init": "Initializes a new project or repository",
+    }
+
+    # Try to extract meaning from command name
+    meaning = None
+    for key, description in meaning_map.items():
+        if key in normalized.lower():
+            meaning = description
+            break
+
+    if not meaning:
+        meaning = f"Custom command '{command}'. Run it to see what it does."
+
     return {
-        "meaning": f"Command: {command}",
-        "when": "Use terminal to explore this command's capabilities",
-        "tips": [f"Run `{command} --help` for more information"],
+        "meaning": meaning,
+        "when": f"Use when you need to run `{command}`. Check `{command} --help` for exact behavior.",
+        "tips": [
+            f"Run `{command} --help` or `man {command}` for full documentation",
+            f"Use `{command} --version` to check the version",
+            "Add flags incrementally to understand their effect",
+        ],
         "alternatives": [],
         "pattern": f"{command} [options] [arguments]",
     }

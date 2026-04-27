@@ -212,7 +212,9 @@ def cmd_delete(db_path: str, target: str) -> int:
     return 0
 
 
-def cmd_clear(db_path: str) -> int:
+def cmd_clear(db_path: str, vault_path: str | None = None) -> int:
+    from pathlib import Path
+    
     conn = _open_conn(db_path)
     conn.execute("DELETE FROM examples")
     conn.execute("DELETE FROM patterns")
@@ -226,7 +228,21 @@ def cmd_clear(db_path: str) -> int:
         """
     )
     conn.commit()
+    
+    # Also clear Obsidian vault if configured
+    if vault_path:
+        commands_dir = Path(vault_path) / "Commands"
+        if commands_dir.exists():
+            for md_file in commands_dir.glob("*.md"):
+                md_file.unlink()
+        # Also clear index file
+        index_file = Path(vault_path) / "_index.md"
+        if index_file.exists():
+            index_file.unlink()
+    
     print("Cleared all book data.")
+    if vault_path:
+        print(f"Cleared Obsidian vault: {vault_path}")
     return 0
 
 
@@ -296,7 +312,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "tips":
         return cmd_tips(args.db_path)
     if args.command == "clear":
-        return cmd_clear(args.db_path)
+        return cmd_clear(args.db_path, vault_path)
     if args.command == "delete":
         return cmd_delete(args.db_path, args.target)
     if args.command == "export":
