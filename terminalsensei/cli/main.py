@@ -286,11 +286,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    import os
+    
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    # Get vault path from either --vault-path flag or daemon subcommand option
-    vault_path = getattr(args, 'vault_path', None)
+    # Get vault path from: --vault-path flag > SENSEI_VAULT_PATH env var > daemon subcommand option
+    vault_path = getattr(args, 'vault_path', None) or os.environ.get('SENSEI_VAULT_PATH')
 
     if args.daemon or args.command == "daemon":
         run_daemon(
