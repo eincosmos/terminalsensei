@@ -113,7 +113,11 @@ class CommandNoteGenerator:
             Updated markdown content
         """
         if not existing_content:
-            return self.create_new_note(command, stats)
+            content = self.create_new_note(command, stats)
+            # Append the raw command even on first creation
+            if raw_command != command:
+                content = self.writer.append_to_usage(content, raw_command)
+            return content
 
         # Update frontmatter
         content = self.writer.update_stat(

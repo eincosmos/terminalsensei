@@ -113,12 +113,13 @@ tags: [cli, terminalsensei]
         if f"`{raw_command}`" in usage_section:
             return content  # Already exists
 
-        # Append new entry while preserving blank line before next section
-        # The usage section ends with a blank line before next ##
-        # We need to insert the new entry before that blank line
+        # Preserve trailing blank lines that separate this section from the next
+        trailing_newlines = len(usage_section) - len(usage_section.rstrip('\n'))
+        
+        # Build the new usage section
         usage_lines = usage_section.rstrip('\n').split('\n')
         usage_lines.append(f"- `{raw_command}`")
-        new_usage = '\n'.join(usage_lines) + '\n'
+        new_usage = '\n'.join(usage_lines) + '\n' * max(1, trailing_newlines)
         
         return (
             content[:frontmatter_end + usage_match.start(1)]

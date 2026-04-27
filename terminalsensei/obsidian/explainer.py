@@ -244,6 +244,19 @@ COMMAND_KNOWLEDGE: dict[str, CommandInfo] = {
         "alternatives": ["--help flag", "info", "tldr"],
         "pattern": "man [section] [command]",
     },
+    "file": {
+        "meaning": "Determine file type and encoding",
+        "when": "Identify what type of file something is without relying on extension",
+        "tips": [
+            "-i: show MIME type",
+            "-b: brief mode (no filename prefix)",
+            "-L: follow symbolic links",
+            "-z: examine compressed files",
+            "-r: don't stop at first match",
+        ],
+        "alternatives": ["stat (show file metadata)", "head (view contents)", "file-info scripts"],
+        "pattern": "file [options] filename",
+    },
 }
 
 
