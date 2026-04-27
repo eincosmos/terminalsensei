@@ -57,44 +57,31 @@ class IndexGenerator:
         lines.append(f"**Total Commands**: {len(rows)}")
         lines.append("")
 
-        # Top 20 commands
-        lines.append("## 🏆 Top Commands")
+        # Section 1: Top Commands (by usage)
+        lines.append("## 🏆 Top Commands (by frequency)")
         lines.append("")
-        for i, (name, usage_count, _) in enumerate(rows[:20], 1):
+        for i, (name, usage_count, _) in enumerate(rows[:15], 1):
             safe_name = sanitize_filename(name)
             lines.append(f"{i}. [[{safe_name}|{name}]] — {usage_count} uses")
         lines.append("")
 
-        # All commands by frequency
-        lines.append("## 📖 All Commands")
+        # Section 2: All Commands (alphabetical order)
+        lines.append("## 📖 All Commands (A-Z)")
+        lines.append("")
+        sorted_rows = sorted(rows, key=lambda x: x[0].lower())
+        for name, usage_count, _ in sorted_rows:
+            safe_name = sanitize_filename(name)
+            lines.append(f"- [[{safe_name}|{name}]] — {usage_count} uses")
         lines.append("")
 
-        # High frequency (>50)
-        high_freq = [r for r in rows if r[1] > 50]
-        if high_freq:
-            lines.append("### Frequently Used (>50)")
-            for name, usage_count, _ in high_freq:
-                safe_name = sanitize_filename(name)
-                lines.append(f"- [[{safe_name}|{name}]] — {usage_count}")
-            lines.append("")
-
-        # Medium frequency (10-50)
-        med_freq = [r for r in rows if 10 <= r[1] <= 50]
-        if med_freq:
-            lines.append("### Medium Frequency (10-50)")
-            for name, usage_count, _ in med_freq:
-                safe_name = sanitize_filename(name)
-                lines.append(f"- [[{safe_name}|{name}]] — {usage_count}")
-            lines.append("")
-
-        # Low frequency (<10)
-        low_freq = [r for r in rows if r[1] < 10]
-        if low_freq:
-            lines.append("### Occasional (<10)")
-            for name, usage_count, _ in low_freq:
-                safe_name = sanitize_filename(name)
-                lines.append(f"- [[{safe_name}|{name}]] — {usage_count}")
-            lines.append("")
+        # Section 3: Least Used Commands
+        lines.append("## 📉 Least Used Commands (bottom 10)")
+        lines.append("")
+        least_used = sorted(rows, key=lambda x: x[1])[:10]
+        for name, usage_count, _ in least_used:
+            safe_name = sanitize_filename(name)
+            lines.append(f"- [[{safe_name}|{name}]] — {usage_count} uses")
+        lines.append("")
 
         # Recent mistakes
         mistakes = conn.execute(
