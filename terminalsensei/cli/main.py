@@ -16,6 +16,7 @@ from terminalsensei.daemon.runner import default_log_path, default_state_path, r
 from terminalsensei.engine.explainer import refresh_missing_descriptions
 from terminalsensei.engine.suggester import generate_tips
 from terminalsensei.exporters.obsidian import ObsidianExporter
+from terminalsensei.obsidian.generator import resolve_book_path
 
 
 def _format_ts(ts: int) -> str:
@@ -231,18 +232,19 @@ def cmd_clear(db_path: str, vault_path: str | None = None) -> int:
     
     # Also clear Obsidian vault if configured
     if vault_path:
-        commands_dir = Path(vault_path) / "Commands"
+        book_path = Path(resolve_book_path(vault_path))
+        commands_dir = book_path / "Commands"
         if commands_dir.exists():
             for md_file in commands_dir.glob("*.md"):
                 md_file.unlink()
         # Also clear index file
-        index_file = Path(vault_path) / "_index.md"
+        index_file = book_path / "_index.md"
         if index_file.exists():
             index_file.unlink()
     
     print("Cleared all book data.")
     if vault_path:
-        print(f"Cleared Obsidian vault: {vault_path}")
+        print(f"Cleared Obsidian vault: {resolve_book_path(vault_path)}")
     return 0
 
 

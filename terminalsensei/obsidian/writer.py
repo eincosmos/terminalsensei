@@ -10,6 +10,8 @@ from typing import Optional
 
 def sanitize_filename(command: str) -> str:
     """Convert command name to safe filename for Obsidian."""
+    # Keep filenames case-normalized so index links and note paths stay consistent.
+    command = command.lower()
     # Replace problematic characters
     sanitized = re.sub(r'[/\\:*?"<>|]', '_', command)
     sanitized = sanitized.strip('. ')

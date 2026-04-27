@@ -10,6 +10,18 @@ from terminalsensei.obsidian.explainer import get_explanation
 from terminalsensei.obsidian.parser import parse_command, normalize_command
 from terminalsensei.obsidian.index import IndexGenerator
 
+SENSEI_BOOK_DIR = "Sensei Book"
+
+
+def resolve_book_path(vault_path: str) -> str:
+    """Resolve the auto-sync target folder inside an Obsidian vault."""
+    from pathlib import Path
+
+    base_path = Path(vault_path).expanduser()
+    if base_path.name == SENSEI_BOOK_DIR:
+        return str(base_path)
+    return str(base_path / SENSEI_BOOK_DIR)
+
 
 class CommandNoteGenerator:
     """Generates and maintains Obsidian notes for CLI commands."""
@@ -180,7 +192,7 @@ def process_command_to_obsidian(
     Args:
         raw_command: Full command from shell
         conn: SQLite database connection
-        vault_path: Path to Obsidian vault
+        vault_path: Path to Obsidian vault root or Sensei Book folder
 
     Returns:
         True if note was created/updated, False otherwise
@@ -208,7 +220,8 @@ def process_command_to_obsidian(
     usage_count, first_used, last_used = row
 
     # Initialize writer and generator
-    writer = ObsidianWriter(vault_path)
+    book_path = resolve_book_path(vault_path)
+    writer = ObsidianWriter(book_path)
     generator = CommandNoteGenerator(writer)
 
     # Generate/update note
@@ -225,8 +238,8 @@ def process_command_to_obsidian(
     writer.write_note(command, new_content)
 
     # Update index file
-    index_path = Path(vault_path) / "_index.md"
-    index_gen = IndexGenerator(index_path)
+    index_path = Path(book_path) / "_index.md"
+    index_gen = IndexGenerator(index_path, commands_link_prefix=f"{SENSEI_BOOK_DIR}/Commands")
     index_gen.update_index(conn)
 
     return True

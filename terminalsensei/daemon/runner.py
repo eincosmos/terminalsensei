@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import fcntl
 from pathlib import Path
 import time
 from typing import List
@@ -35,6 +36,21 @@ def save_offset(state_path: str, offset: int) -> None:
     p = Path(state_path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps({"offset": offset}), encoding="utf-8")
+
+
+def acquire_daemon_lock(state_path: str):
+    """Ensure only one daemon instance is processing the same state/log stream."""
+    lock_path = Path(state_path).with_suffix(".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_handle = lock_path.open("w", encoding="utf-8")
+    try:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        lock_handle.close()
+        return None
+    lock_handle.write(str(Path.cwd()))
+    lock_handle.flush()
+    return lock_handle
 
 
 def parse_log_line(line: str) -> LogRecord | None:
@@ -78,6 +94,11 @@ def run_daemon(
 ) -> int:
     effective_log_path = log_path or default_log_path()
     effective_state_path = state_path or default_state_path()
+    lock_handle = acquire_daemon_lock(effective_state_path)
+    if lock_handle is None:
+        print(f"Daemon already running for state file: {effective_state_path}")
+        return 0
+
     offset = load_offset(effective_state_path)
     tracker = Tracker(db_path=db_path, vault_path=vault_path)
 
@@ -100,3 +121,4 @@ def run_daemon(
             time.sleep(interval)
     finally:
         tracker.close()
+        lock_handle.close()

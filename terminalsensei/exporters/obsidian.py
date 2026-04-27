@@ -150,7 +150,7 @@ class ObsidianExporter:
         lines.append("")
         for i, cmd in enumerate(commands[:20], 1):
             safe_name = _sanitize_filename(cmd.name)
-            lines.append(f"{i}. [[{safe_name}|{cmd.name}]] — {cmd.usage_count} uses")
+            lines.append(f"{i}. [[{self.subfolder}/Commands/{safe_name}|{cmd.name}]] — {cmd.usage_count} uses")
         lines.append("")
 
         # All commands (grouped by frequency)
@@ -163,7 +163,7 @@ class ObsidianExporter:
             lines.append("### Frequently Used (>50 uses)")
             for cmd in high_freq:
                 safe_name = _sanitize_filename(cmd.name)
-                lines.append(f"- [[{safe_name}|{cmd.name}]] ({cmd.usage_count})")
+                lines.append(f"- [[{self.subfolder}/Commands/{safe_name}|{cmd.name}]] ({cmd.usage_count})")
             lines.append("")
 
         # Medium frequency (10-50 uses)
@@ -172,7 +172,7 @@ class ObsidianExporter:
             lines.append("### Medium Frequency (10-50 uses)")
             for cmd in med_freq:
                 safe_name = _sanitize_filename(cmd.name)
-                lines.append(f"- [[{safe_name}|{cmd.name}]] ({cmd.usage_count})")
+                lines.append(f"- [[{self.subfolder}/Commands/{safe_name}|{cmd.name}]] ({cmd.usage_count})")
             lines.append("")
 
         # Low frequency (<10 uses)
@@ -181,7 +181,7 @@ class ObsidianExporter:
             lines.append("### Occasional (1-9 uses)")
             for cmd in low_freq:
                 safe_name = _sanitize_filename(cmd.name)
-                lines.append(f"- [[{safe_name}|{cmd.name}]] ({cmd.usage_count})")
+                lines.append(f"- [[{self.subfolder}/Commands/{safe_name}|{cmd.name}]] ({cmd.usage_count})")
             lines.append("")
 
         # Recent mistakes section

@@ -39,6 +39,21 @@ python -m pip install -e .
 
 ## Shell Hook Setup (Passive Collector)
 
+### One-command setup (recommended for beginners)
+
+```bash
+bash scripts/setup.sh "/path/to/Obsidian Vault"
+```
+
+This script:
+- creates `.venv` in the repo and installs TerminalSensei (`pip install -e .`)
+- adds shell hooks to your `~/.bashrc` or `~/.zshrc`
+- configures `SENSEI_VAULT_PATH`
+- starts the daemon automatically (and on future shell startups)
+
+Detailed build + interview documentation:
+- `docs/IMPLEMENTATION_DEEP_DIVE.md`
+
 Collector file:
 
 ```bash

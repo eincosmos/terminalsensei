@@ -12,14 +12,16 @@ from terminalsensei.obsidian.writer import sanitize_filename
 class IndexGenerator:
     """Generates and maintains the Obsidian _index.md file."""
 
-    def __init__(self, index_path: str | Path):
+    def __init__(self, index_path: str | Path, commands_link_prefix: str = "Commands"):
         """
         Initialize index generator.
 
         Args:
             index_path: Path to _index.md file
+            commands_link_prefix: Vault-relative folder path for command notes
         """
         self.index_path = Path(index_path)
+        self.commands_link_prefix = commands_link_prefix.rstrip("/")
 
     def generate_index(self, conn: sqlite3.Connection) -> str:
         """
@@ -62,7 +64,9 @@ class IndexGenerator:
         lines.append("")
         for i, (name, usage_count, _) in enumerate(rows[:15], 1):
             safe_name = sanitize_filename(name)
-            lines.append(f"{i}. [[Commands/{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(
+                f"{i}. [[{self.commands_link_prefix}/{safe_name}|{name}]] — {usage_count} uses"
+            )
         lines.append("")
 
         # Section 2: All Commands (alphabetical order)
@@ -71,7 +75,9 @@ class IndexGenerator:
         sorted_rows = sorted(rows, key=lambda x: x[0].lower())
         for name, usage_count, _ in sorted_rows:
             safe_name = sanitize_filename(name)
-            lines.append(f"- [[Commands/{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(
+                f"- [[{self.commands_link_prefix}/{safe_name}|{name}]] — {usage_count} uses"
+            )
         lines.append("")
 
         # Section 3: Least Used Commands
@@ -80,7 +86,9 @@ class IndexGenerator:
         least_used = sorted(rows, key=lambda x: x[1])[:10]
         for name, usage_count, _ in least_used:
             safe_name = sanitize_filename(name)
-            lines.append(f"- [[Commands/{safe_name}|{name}]] — {usage_count} uses")
+            lines.append(
+                f"- [[{self.commands_link_prefix}/{safe_name}|{name}]] — {usage_count} uses"
+            )
         lines.append("")
 
         # Recent mistakes
